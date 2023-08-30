@@ -8,20 +8,11 @@ import { Box } from '@chakra-ui/react';
 
 const ChatPage = () => {
 
-  const { user } = ChatState();
-  const navigate = useNavigate();
-
-  const fetchChats = async () => {
-    
-  }
-
-  useEffect(() => {
-    
-  }, [])
+  const {user} = ChatState(); 
 
   return (
-    <div style = {{width:'100%'}}>
-      {user && <SideDrawer />}
+    <div style = {{width:'98%'}}>
+      {user && <SideDrawer/>}
       <Box 
         display='flex'
         justifyContent='space-between'
