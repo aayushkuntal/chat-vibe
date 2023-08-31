@@ -4,10 +4,10 @@ const User = require('../models/userModel.js');
 
 const accessChat = asyncHandler(async (req, res) => {
     //id here is the id of the user with whom the current user wants to chat
-    const { id } = req.body;
+    const { userId } = req.body;
 
 
-    if (!id) {
+    if (!userId) {
         res.status(400);
         throw new Error('Please enter all fields');
     }
@@ -17,7 +17,7 @@ const accessChat = asyncHandler(async (req, res) => {
             isGroupChat: false,
             $and: [
                 { users: { $elemMatch: { $eq: req.user._id } } },
-                { users: { $elemMatch: { $eq: id } } }
+                { users: { $elemMatch: { $eq: userId } } }
 
                 //Both the above conditions should be true
                 //First one checks if the user is present in the users array
@@ -38,7 +38,7 @@ const accessChat = asyncHandler(async (req, res) => {
     else {
         const newChat = new Chat({
             chatName: 'sender',
-            users: [req.user._id, id],
+            users: [req.user._id, userId],
             isGroupChat: false
         });
 
@@ -60,9 +60,9 @@ const accessChat = asyncHandler(async (req, res) => {
 
 const fetchChats = asyncHandler(async (req, res) => {
     try {
-        const chats = await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+        Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
             .populate("users", "-password")
-            .populate('groupAdmin')
+            .populate("groupAdmin", "-password")
             .populate("latestMessage")
             .sort({ updatedAt: -1 })
             .then(async (results) => {
@@ -70,11 +70,11 @@ const fetchChats = asyncHandler(async (req, res) => {
                     path: "latestMessage.sender",
                     select: "name pic email",
                 });
-                res.status(200).json(chats);
+                res.status(200).send(results);
             });
     } catch (error) {
         res.status(400);
-        throw new Error(error);
+        throw new Error(error.message);
     }
 });
 
@@ -158,7 +158,7 @@ const addToGroup = asyncHandler(async (req, res) => {
         )
             .populate("users", "-password")
             .populate("groupAdmin", "-password");
-        
+
         res.status(200).json(added);
     } catch (error) {
         res.status(400);

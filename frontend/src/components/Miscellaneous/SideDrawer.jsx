@@ -19,10 +19,12 @@ import axios from 'axios';
 import { useToast } from '@chakra-ui/react'
 import ChatLoading from './ChatLoading';
 import UserListItem from '../Custom/UserListItem';
+import { Spinner } from "@chakra-ui/spinner";
+
 
 const SideDrawer = () => {
 
-  const { user } = ChatState();
+  const { user, setSelectedChat, chats, setChats } = ChatState();
   const toast = useToast();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -30,6 +32,7 @@ const SideDrawer = () => {
   const [loading, setLoading] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure()
+
 
   const logoutHandler = () => {
     localStorage.removeItem('userInfo')
@@ -57,8 +60,7 @@ const SideDrawer = () => {
         },
       };
 
-      const { data } = await axios.get(`https://chat-vibe-backend.onrender.com/api/user?search=${search}`, config);
-      console.log(data);
+      const { data } = await axios.get(`http://localhost:5000/api/user?search=${search}`, config);
       setLoading(false);
       setSearchResult(data);
     } catch (error) {
@@ -73,6 +75,35 @@ const SideDrawer = () => {
     }
   };
 
+  const accessChat = async (userId) => {
+
+    try {
+      setLoadingChat(true);
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+      const { data } = await axios.post(`http://localhost:5000/api/chat`, { userId }, config);
+
+      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
+      console.log(chats);
+      setSelectedChat(data);
+      setLoadingChat(false);
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error fetching the chat",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+      });
+      setLoadingChat(false);
+    }
+  };
 
   return (
     <>
@@ -139,18 +170,18 @@ const SideDrawer = () => {
               />
               <Button onClick={handleSearch}>Go</Button>
             </Box>
+            {loadingChat && <Spinner ml="auto" d="flex" />}
             {loading ? (
-            <ChatLoading />
-          ) : (
-            searchResult?.map((user) => (
-              <UserListItem
-                key={user._id}
-                user={user}
-                handleFunction={() => accessChat(user._id)}
-              />
-            ))
-          )}
-          {loadingChat && <Spinner ml="auto" d="flex" />}
+              <ChatLoading />
+            ) : (
+              searchResult?.map((user) => (
+                <UserListItem
+                  key={user._id}
+                  user={user}
+                  handleFunction={() => accessChat(user._id)}
+                />
+              ))
+            )}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
