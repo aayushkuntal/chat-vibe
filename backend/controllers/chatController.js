@@ -182,7 +182,7 @@ const removeFromGroup = asyncHandler(async (req, res) => {
         throw new Error('User not added');
     }
 
-    res.status(200).json(added);
+    res.status(200).json(removed);
 });
 
 module.exports = { removeFromGroup, addToGroup, accessChat, fetchChats, createGroupChat, renameGroup };
